@@ -44,24 +44,20 @@ module RISCV_CNN_tb;
     // Test stimulus
     // =========================
     initial begin
-        rstn = 1'b1;
-        #20;
-        rstn = 1'b0;     // assert reset
-        #50;
-        rstn = 1'b1;     // release reset
-        #500// Initial value
+        // Initialize every asynchronous testbench input at time 0.
+        // In post-implementation timing simulation, letting reset or st change
+        // exactly on a sampling edge can violate recovery/setup in the gate netlist.
+        rstn = 1'b0;     // assert active-low reset from time 0
         mode = 1'b0;
         tc   = 4'h0;
-        st   = 1'b0; 
+        st   = 1'b0;
 
-        // -------------------------
-        // Active-low reset
-        // reset negedge
-        // -------------------------
+        // Release reset away from the active clock edge.
+        repeat (10) @(posedge FPGA_clk);
+        @(negedge FPGA_clk);
+        rstn = 1'b1;
 
-
-
-        // Wait a few cycles after reset
+        // Wait a few stable cycles after reset release.
         repeat (5) @(posedge FPGA_clk);
         @(negedge FPGA_clk);
 
@@ -101,4 +97,3 @@ module RISCV_CNN_tb;
     end
 
 endmodule
-
